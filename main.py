@@ -12,7 +12,7 @@ import enum
 
 logging.basicConfig(
     format='%(lineno)s %(message)s',
-    level=logging.DEBUG
+    level=logging.WARN
 )
 direction = enum.Enum('up', 'down', 'sideways')
 
@@ -115,9 +115,12 @@ def process(command):
 
     return p
 
-# http://stackoverflow.com/questions/5738901/removing-elements-that-have-consecutive-dupes
 def remove_consecutive_duplicates(i):
     return [x[0] for x in itertools.groupby(i)]
+
+def pairwise_abs(i):
+    diffs = [abs(a-b) for a,b in itertools.izip(i, i[1:])]
+    return sum(diffs)
 
 def get_next(i):
     try:
@@ -170,21 +173,23 @@ def compress_transitions(command):
 
     master_path = remove_consecutive_duplicates(
         itertools.chain.from_iterable(master_path.floors))
-    logging.debug(list(master_path))
+
+    return list(master_path)
 
 
 
 def optimal_process(command):
 
     p = Path()
+    p.floors = compress_transitions(command)
 
-    compress_transitions(command)
+    logging.debug(p.floors)
 
-    logging.debug("HEE")
+    p.distance = pairwise_abs(p.floors)
 
     return p
 
-def main(input_file='input.dat', mode='naive'):
+def main(input_file, mode='naive'):
     """
     Given an INPUT_FILE return a concordance of it's data.
     """
@@ -194,8 +199,10 @@ def main(input_file='input.dat', mode='naive'):
 
         if mode == 'naive':
             print process(command)
-        else:
+        elif mode == 'optimal':
             print optimal_process(command)
+        else:
+            print "Mode '{0}' not recognized".format(mode)
 
 
 if __name__ == '__main__':
