@@ -18,8 +18,8 @@ direction = enum.Enum('up', 'down', 'sideways')
 
 class Command:
     """
-    A Command is an object consisting of a start_floor
-    and a list of Transition instances
+    A Command instance consists of a start_floor and a list of
+    Transition instances.
     """
 
     def __init__(self, start_floor, transitions):
@@ -27,15 +27,13 @@ class Command:
         self.transitions = transitions
 
     def __str__(self):
-        # return "Command, \n\tstart_floor = {0}\n\ttransitions = {1}".format(
-        #     self.start_floor, self.transitions)
         return "Command, \n\tstart_floor = {0}\n\ttransitions = {1}".format(
-            self.start_floor, [ t.__str__() for t in self.transitions])
+            self.start_floor, map(str, self.transitions))
 
 class Transition:
     """
-    A transition is an object consisting of an origin floor
-    and destination floor
+    A Transition instance consists of an origin floor
+    and destination floor.
     """
 
     def __init__(self, origin, destination):
@@ -54,7 +52,7 @@ class Transition:
         return "Transition {0} -> {1}".format(self.origin, self.destination)
 
 class Path:
-    """A Path is an object representing the list of floors to go to and the
+    """A Path instance represents the list of floors to go to and the
     distance traveled."""
 
     def __init__(self):
@@ -70,8 +68,7 @@ class Path:
 def parse_command_string(s):
     """
     Given a COMMAND_STRING, return a 2-tuple of START_FLOOR and
-    list of ORIGINS_AND_DESTINATIONS, where ORIGINS_AND_DESTINATIONS
-    is a namedtuple of origin and destination.
+    list of Transition instances.
     """
     start_floor, origins_and_destinations = s.split(':')
     start_floor = int(start_floor)
@@ -88,7 +85,7 @@ def parse_command_string(s):
 
 def commands(filename):
     """
-    Given a FILENAME, open the file and return each line as a command.
+    Given a FILENAME, open the file and yield each line as a command.
     """
     f = file(filename).read()
 
@@ -99,7 +96,7 @@ def commands(filename):
 
 def process(command):
     """
-    Given a COMMAND, return a Path instance calculatived naively.
+    Given a COMMAND, return a Path instance calculatived naively (mode A).
     """
 
     p = Path()
@@ -128,19 +125,6 @@ def get_next(i):
     except StopIteration:
         return None
 
-def merge_destination(c, n):
-
-    if c.direction == direction.down:
-        return c.destination if c.destination > n.destination else n.destination
-
-    if c.direction == direction.up:
-        return c.destination if c.destination < n.destination else n.destination
-
-    elif origin > destination:
-        return direction.down
-    elif origin > destination:
-        return direction.up
-
 def sort_floors(_direction, floors):
     if _direction == direction.down:
         return sorted(floors, reverse=True)
@@ -149,7 +133,7 @@ def sort_floors(_direction, floors):
 
 def compress_transitions(command):
     """
-    Given a list of TRANSITIONS, return an optimized list of TRANSITIONS.
+    Given a list of Transition instances, return an optimized list of floors.
     """
 
     starting_floor_transition = Transition(
@@ -179,6 +163,9 @@ def compress_transitions(command):
 
 
 def optimal_process(command):
+    """
+    Given a COMMAND, return a Path instance calculatived optimally (mode B).
+    """
 
     p = Path()
     p.floors = compress_transitions(command)
@@ -189,22 +176,22 @@ def optimal_process(command):
 
     return p
 
-def main(input_file, mode='naive'):
+def main(input_file, mode='A'):
     """
-    Given an INPUT_FILE return a concordance of it's data.
+    Given an INPUT_FILE of navigation commands and a NAVIGATION_MODE,
+for each command, print to standard output a single line consisting of a space-delimited list of floors followed by the total distance in floors that the elevator travels, in parenthesis "(" and ")". The lists of floors begins with the initial floor location followed by the visited floors in the order that the elevator visits them.
     """
 
     for i, command in enumerate(commands(input_file)):
         logging.debug(command)
 
-        if mode == 'naive':
+        if mode.upper() == 'A':
             print process(command)
-        elif mode == 'optimal':
+        elif mode.upper() == 'B':
             print optimal_process(command)
         else:
             print "Mode '{0}' not recognized".format(mode)
 
 
 if __name__ == '__main__':
-
     argh.dispatch_command(main)
